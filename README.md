@@ -4,7 +4,7 @@ Plan rota on google calendar.
 
 ## Usage
 
-Get a `credentials.json` file from GCloud and place it in the same folder as the executable.
+Get a `credentials.json` file from GCloud and place it in `~/.google-rotation-planner/credentials.json`.
 
 Place your configuration file in `config.yaml`:
 
