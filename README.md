@@ -27,3 +27,13 @@ members:
   - name: Jean Dupond
     email: dupond@example.com
 ```
+
+## Build
+
+Binaries can be downloaded from here: https://github.com/gjolly/google-rotation-planner/releases/latest
+
+To build it yourself:
+
+```bash
+go build -o . ./...
+```
