@@ -13,7 +13,7 @@ import (
 	"github.com/gjolly/google-rotation-planner/cmd/google-rotation-planner/localcred"
 	"github.com/pkg/errors"
 	"google.golang.org/api/calendar/v3"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const week = 7 * 24 * time.Hour
