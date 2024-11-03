@@ -18,6 +18,11 @@ startDate: 2021-11-26
 # the calendar ID where to configure the rotation
 calendarID: <calendar-id>
 
+# optional list of attachments
+attachments:
+  - name: Notes
+    url: https://docs.google.com/document/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/edit?usp=sharing
+
 # the members of the rotation
 members:
   - name: John Doe
