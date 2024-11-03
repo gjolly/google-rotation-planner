@@ -4,14 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"time"
 
 	"github.com/gjolly/google-rotation-planner/cmd/google-rotation-planner/localcred"
-	"github.com/pkg/errors"
 	"google.golang.org/api/calendar/v3"
 	"gopkg.in/yaml.v3"
 )
@@ -49,7 +47,7 @@ func createShift(c *Config, member Member, frequence int, startDate time.Time, s
 
 	_, err = srv.Events.Insert(c.CalendarID, event).SendNotifications(c.Notify).Do()
 	if err != nil {
-		return errors.Wrap(err, "unable to create event")
+		return fmt.Errorf("unable to create event: %w", err)
 	}
 	return nil
 }
@@ -59,7 +57,7 @@ func createRota(c *Config, srv *calendar.Service) error {
 		startDate := c.StartDate.Add(time.Duration(shiftNum * c.ShiftDuration * int(week)))
 		err := createShift(c, member, len(c.Members), startDate, srv)
 		if err != nil {
-			return errors.Wrapf(err, "failed to create shift for %v", member)
+			return fmt.Errorf("failed to create shift for %v: %w", member, err)
 		}
 	}
 
@@ -91,7 +89,7 @@ type Config struct {
 func parseConfig() (*Config, error) {
 	c := new(Config)
 
-	content, err := ioutil.ReadFile("config.yaml") // the file is inside the local directory
+	content, err := os.ReadFile("config.yaml") // the file is inside the local directory
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +107,7 @@ func cleanup(c *Config, srv *calendar.Service) error {
 	events, err := srv.Events.List(c.CalendarID).ShowDeleted(false).TimeMin(t).Do()
 
 	if err != nil {
-		return errors.Wrap(err, "Unable to retrieve next ten of the user's events")
+		return fmt.Errorf("unable to retrieve next ten of the user's events: %w", err)
 	}
 
 	if len(events.Items) == 0 {
