@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/gjolly/google-rotation-planner/cmd/google-rotation-planner/localcred"
-	"google.golang.org/api/calendar/v3"
-	"gopkg.in/yaml.v3"
+	calendar "google.golang.org/api/calendar/v3"
+	yaml "gopkg.in/yaml.v3"
 )
 
 const week = 7 * 24 * time.Hour
 
-func createShift(c *Config, member Member, frequence int, startDate time.Time, srv *calendar.Service) error {
+func createShift(c *Config, member Member, frequence int, startDate time.Time, insertEvent func(*calendar.Event) error) error {
 	endDate := startDate.Add(time.Duration(c.ShiftDuration * int(week)))
 	tz, err := time.LoadLocation("")
 	if err != nil {
@@ -55,17 +55,18 @@ func createShift(c *Config, member Member, frequence int, startDate time.Time, s
 		}
 	}
 
-	_, err = srv.Events.Insert(c.CalendarID, event).SupportsAttachments(true).SendNotifications(c.Notify).Do()
+	err = insertEvent(event)
 	if err != nil {
 		return fmt.Errorf("unable to create event: %w", err)
 	}
+
 	return nil
 }
 
-func createRota(c *Config, srv *calendar.Service) error {
+func createRota(c *Config, insertEvent func(*calendar.Event) error) error {
 	for shiftNum, member := range c.Members {
 		startDate := c.StartDate.Add(time.Duration(shiftNum * c.ShiftDuration * int(week)))
-		err := createShift(c, member, len(c.Members), startDate, srv)
+		err := createShift(c, member, len(c.Members), startDate, insertEvent)
 		if err != nil {
 			return fmt.Errorf("failed to create shift for %v: %w", member, err)
 		}
@@ -102,10 +103,10 @@ type Config struct {
 	Attachments   []Attachment `yaml:"attachments"`
 }
 
-func parseConfig() (*Config, error) {
+func parseConfig(configPath string) (*Config, error) {
 	c := new(Config)
 
-	content, err := os.ReadFile("config.yaml") // the file is inside the local directory
+	content, err := os.ReadFile(configPath) // the file is inside the local directory
 	if err != nil {
 		return nil, err
 	}
@@ -118,10 +119,8 @@ func parseConfig() (*Config, error) {
 	return c, nil
 }
 
-func cleanup(c *Config, srv *calendar.Service) error {
-	t := time.Now().Format(time.RFC3339)
-	events, err := srv.Events.List(c.CalendarID).ShowDeleted(false).TimeMin(t).Do()
-
+func cleanup(listEvents func() (*calendar.Events, error), deleteEvent func(*calendar.Event) error) error {
+	events, err := listEvents()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve next ten of the user's events: %w", err)
 	}
@@ -131,7 +130,7 @@ func cleanup(c *Config, srv *calendar.Service) error {
 	} else {
 		for _, item := range events.Items {
 			fmt.Println("deleting ", item.Summary)
-			err = srv.Events.Delete(c.CalendarID, item.Id).Do()
+			err = deleteEvent(item)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -141,44 +140,86 @@ func cleanup(c *Config, srv *calendar.Service) error {
 	return nil
 }
 
+type ConfigProvider interface {
+	InitConfig(string) error
+	Service(context.Context, string) (*calendar.Service, error)
+}
+
+var configProvider ConfigProvider = new(localcred.Provider)
+
 var FlagCleanup = flag.Bool("cleanup", false, "Remove all the recurring events from the calendar.")
+
+var generateListEvents = func(srv *calendar.EventsService, c *Config) func() (*calendar.Events, error) {
+	return func() (*calendar.Events, error) {
+		t := time.Now().Format(time.RFC3339)
+		return srv.List(c.CalendarID).ShowDeleted(false).TimeMin(t).Do()
+	}
+}
+
+var generateDeleteEvent = func(srv *calendar.EventsService, c *Config) func(event *calendar.Event) error {
+	return func(event *calendar.Event) error {
+		return srv.Delete(c.CalendarID, event.Id).Do()
+	}
+}
+
+var generateCreateEvents = func(srv *calendar.EventsService, c *Config) func(event *calendar.Event) error {
+	return func(event *calendar.Event) error {
+		_, err := srv.Insert(c.CalendarID, event).
+			SupportsAttachments(true).
+			SendNotifications(c.Notify).
+			Do()
+
+		return err
+	}
+}
+
+var getEventService = func(ctx context.Context) (*calendar.EventsService, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("cannot find user's home folder: %w", err)
+	}
+	cfgDir := path.Join(home, ".google-rotation-planner")
+
+	err = configProvider.InitConfig(cfgDir)
+	if err != nil {
+		return nil, fmt.Errorf("unable to init config: %w", err)
+	}
+
+	srv, err := configProvider.Service(ctx, cfgDir)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve Calendar client: %w", err)
+	}
+
+	return srv.Events, nil
+}
+
+var configPath = "config.yaml"
 
 func main() {
 	flag.Parse()
 
 	ctx := context.Background()
 
-	home, err := os.UserHomeDir()
+	srv, err := getEventService(ctx)
 	if err != nil {
-		log.Fatalf("Cannot find user's home folder: %v", err)
-	}
-	cfgDir := path.Join(home, ".google-rotation-planner")
-
-	provider := new(localcred.Provider)
-	err = provider.InitConfig(cfgDir)
-	if err != nil {
-		log.Fatalf("Unable to init config: %v", err)
+		log.Fatal(err)
 	}
 
-	srv, err := provider.Service(ctx, cfgDir)
-	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar client: %v", err)
-	}
-
-	c, err := parseConfig()
+	c, err := parseConfig(configPath)
 	if err != nil {
 		log.Fatalf("Unable to parse config: %v", err)
 	}
 
 	if *FlagCleanup {
-		err = cleanup(c, srv)
+		err = cleanup(generateListEvents(srv, c), generateDeleteEvent(srv, c))
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		return
 	}
-	err = createRota(c, srv)
+
+	err = createRota(c, generateCreateEvents(srv, c))
 	if err != nil {
 		log.Fatalf("Failed to create rota: %v", err)
 	}
