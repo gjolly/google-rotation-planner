@@ -22,6 +22,11 @@ Place your configuration file in `config.yaml`:
 # duration of a shift in weeks (integer)
 shiftDuration: 1
 
+# optional: the title of the event
+# {{.Name}} can be used to refer to the name of the member
+# defaults to '{{.Name}} on duty'
+title: This is an example for {{.Name}}
+
 # start date for the rotation (default to time.Now())
 startDate: 2021-11-26
 
