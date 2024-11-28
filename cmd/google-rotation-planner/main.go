@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"text/template"
 	"time"
 
 	"github.com/gjolly/google-rotation-planner/cmd/google-rotation-planner/localcred"
@@ -24,8 +26,19 @@ func createShift(c *Config, member Member, frequence int, startDate time.Time, i
 	}
 	fmt.Printf("creating shift for %v, first shift starting on %v and finshing on %v (%v week(s))\n", member.Name, startDate, endDate, c.ShiftDuration)
 
+	if c.Title == "" {
+		c.Title = "{{.Name}} on duty"
+	}
+
+	tmpl, err := template.New("title").Parse(c.Title)
+	if err != nil {
+		return fmt.Errorf("failed to parse title template: %w", err)
+	}
+	var renderedTitle bytes.Buffer
+	tmpl.Execute(&renderedTitle, member)
+
 	event := &calendar.Event{
-		Summary:     fmt.Sprintf("%v on duty", member.Name),
+		Summary:     renderedTitle.String(),
 		Description: c.Description,
 		Start: &calendar.EventDateTime{
 			Date:     startDate.Format("2006-01-02"),
@@ -96,6 +109,7 @@ type Attachment struct {
 type Config struct {
 	StartDate     time.Time    `yaml:"startDate"`
 	Members       []Member     `yaml:"members"`
+	Title         string       `yaml:"title"`
 	CalendarID    string       `yaml:"calendarID"`
 	ShiftDuration int          `yaml:"shiftDuration"`
 	Description   string       `yaml:"description"`
