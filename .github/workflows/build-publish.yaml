@@ -17,6 +17,9 @@ jobs:
       - name: setup Go
         run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.21'
 
+      - name: run tests
+        run: '/usr/lib/go-1.21/bin/go test -count=1 ./...'
+
       - name: build-linux
         run: '/usr/lib/go-1.21/bin/go build -o google-rotation-planner_linux_amd64.bin ./cmd/google-rotation-planner'
 
