@@ -4,7 +4,7 @@ This tool allows you to easily configure your on-call rotations on Google Calend
 
 ## Installation
 
-The recommanded way to install this tool is to download the right pre-built binary for your system from the [latest release](https://github.com/gjolly/google-rotation-planner/releases/latest).
+The recommended way to install this tool is to download the right pre-built binary for your system from the [latest release](https://github.com/gjolly/google-rotation-planner/releases/latest).
 
 You can also install the tool with `golang`:
 
