@@ -5,7 +5,6 @@ go 1.22
 toolchain go1.23.2
 
 require (
-	github.com/pkg/errors v0.9.1
 	golang.org/x/oauth2 v0.23.0
 	google.golang.org/api v0.204.0
 	gopkg.in/yaml.v3 v3.0.1
