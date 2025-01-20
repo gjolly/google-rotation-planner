@@ -93,3 +93,60 @@ members:
 		t.Errorf("%d events should be created but got %d events", 2, eventsCreated)
 	}
 }
+
+func TestCustomTitle(t *testing.T) {
+	generateListEvents = generateNoopListEvents
+	generateDeleteEvent = generateNoopDeleteEvent
+	getEventService = getNilEventsService
+
+	config := `
+shiftDuration: 1
+startDate: 2024-11-03
+calendarID: calendarID
+attachments:
+  - name: attachmentName
+    url: fileURL
+members:
+  - name: Test User 1
+    email: test1@example.com
+title: foobar {{.Name}}
+`
+
+	eventsCreated := 0
+	generateCreateEvents = func(*calendar.EventsService, *Config) func(*calendar.Event) error {
+		return func(event *calendar.Event) error {
+			eventsCreated++
+			expected := "foobar Test User 1"
+			if event.Summary != expected {
+				t.Errorf("event summary doesn't match the title, expected '%s' got '%s'", expected, event.Summary)
+			}
+
+			return nil
+		}
+	}
+
+	configFile, err := os.CreateTemp("", "test-google-rotation-planner-*.yaml")
+	if err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	// modify module variable
+	configPath = configFile.Name()
+	defer os.Remove(configPath)
+
+	_, err = configFile.Write([]byte(config))
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	err = configFile.Close()
+	if err != nil {
+		t.Fatalf("failed to close test file: %v", err)
+	}
+
+	main()
+
+	if eventsCreated != 1 {
+		t.Errorf("%d events should be created but got %d events", 1, eventsCreated)
+	}
+}
