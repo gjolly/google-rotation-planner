@@ -45,7 +45,17 @@ func createShift(c *Config, member Member, frequence int, startDate time.Time, s
 		Transparency: "transparent",
 	}
 
-	_, err = srv.Events.Insert(c.CalendarID, event).SendNotifications(c.Notify).Do()
+	if len(c.Attachments) != 0 {
+		event.Attachments = make([]*calendar.EventAttachment, len(c.Attachments))
+		for i, attachment := range c.Attachments {
+			event.Attachments[i] = &calendar.EventAttachment{
+				FileUrl: attachment.URL,
+				Title:   attachment.Name,
+			}
+		}
+	}
+
+	_, err = srv.Events.Insert(c.CalendarID, event).SupportsAttachments(true).SendNotifications(c.Notify).Do()
 	if err != nil {
 		return fmt.Errorf("unable to create event: %w", err)
 	}
@@ -74,16 +84,22 @@ func (m Member) String() string {
 	return fmt.Sprintf("%v (%v)", m.Name, m.EmailAddr)
 }
 
+type Attachment struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
 // Config holds the informations about the google calendar
 // to use, the members of the rota and other paramaters
 // for the rota
 type Config struct {
-	StartDate     time.Time `yaml:"startDate"`
-	Members       []Member  `yaml:"members"`
-	CalendarID    string    `yaml:"calendarID"`
-	ShiftDuration int       `yaml:"shiftDuration"`
-	Description   string    `yaml:"description"`
-	Notify        bool      `yaml:"notify"`
+	StartDate     time.Time    `yaml:"startDate"`
+	Members       []Member     `yaml:"members"`
+	CalendarID    string       `yaml:"calendarID"`
+	ShiftDuration int          `yaml:"shiftDuration"`
+	Description   string       `yaml:"description"`
+	Notify        bool         `yaml:"notify"`
+	Attachments   []Attachment `yaml:"attachments"`
 }
 
 func parseConfig() (*Config, error) {
