@@ -27,13 +27,13 @@ To do so, head to https://console.developers.google.com
     2c. Use your email for 'User support email' and 'Developer
         contact information'. Save and continue.
     3c. Select 'Add or remove scopes' and add:
-		* https://www.googleapis.com/auth/calendar.events
+        * https://www.googleapis.com/auth/calendar.events
     3d. Save and continue until you're back to the dashboard.
 3. You now have a choice. You can either:
     * Click on 'Publish App' and avoid 'Submitting for
       verification'. This will result in scary confirmation
-      screens or error messages when you authorize gmailctl with
-      your account (but for some users it works), OR
+      screens or error messages when you authorize google-rotation-plannner
+      with your account (but for some users it works), OR
     * You could add your email as 'Test user' and keep the app in
       'Testing' mode. In this case everything will work, but
       you'll have to login and confirm the access every week (token
