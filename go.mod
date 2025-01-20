@@ -5,7 +5,8 @@ go 1.22
 toolchain go1.23.2
 
 require (
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/net v0.30.0
+	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.204.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -30,7 +31,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.31.0 // indirect
 	go.opentelemetry.io/otel/trace v1.31.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241007155032-5fefd90f89a9 // indirect
