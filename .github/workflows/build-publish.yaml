@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -15,22 +15,22 @@ jobs:
           submodules: true
 
       - name: setup Go
-        run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.21'
+        run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.23'
 
       - name: run tests
-        run: '/usr/lib/go-1.21/bin/go test -count=1 ./...'
+        run: '/usr/lib/go-1.23/bin/go test -count=1 ./...'
 
       - name: build-linux
-        run: '/usr/lib/go-1.21/bin/go build -o google-rotation-planner_linux_amd64.bin ./cmd/google-rotation-planner'
+        run: '/usr/lib/go-1.23/bin/go build -o google-rotation-planner_linux_amd64.bin ./cmd/google-rotation-planner'
 
       - name: build-windows
-        run: 'GOOS=windows /usr/lib/go-1.21/bin/go build -o google-rotation-planner_windows_amd64.exe ./cmd/google-rotation-planner'
+        run: 'GOOS=windows /usr/lib/go-1.23/bin/go build -o google-rotation-planner_windows_amd64.exe ./cmd/google-rotation-planner'
 
       - name: build-macos-amd64
-        run: 'GOOS=darwin /usr/lib/go-1.21/bin/go build -o google-rotation-planner_macos_amd64.bin ./cmd/google-rotation-planner'
+        run: 'GOOS=darwin /usr/lib/go-1.23/bin/go build -o google-rotation-planner_macos_amd64.bin ./cmd/google-rotation-planner'
 
       - name: build-macos-amd64
-        run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.21/bin/go build -o google-rotation-planner_macos_arm64.bin ./cmd/google-rotation-planner'
+        run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.23/bin/go build -o google-rotation-planner_macos_arm64.bin ./cmd/google-rotation-planner'
 
       - name: release
         uses: softprops/action-gh-release@v1
