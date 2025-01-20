@@ -29,7 +29,7 @@ jobs:
       - name: build-macos-amd64
         run: 'GOOS=darwin /usr/lib/go-1.23/bin/go build -o google-rotation-planner_macos_amd64.bin ./cmd/google-rotation-planner'
 
-      - name: build-macos-amd64
+      - name: build-macos-arm64
         run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.23/bin/go build -o google-rotation-planner_macos_arm64.bin ./cmd/google-rotation-planner'
 
       - name: release
