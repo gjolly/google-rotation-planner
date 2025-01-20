@@ -1,0 +1,40 @@
+name: build and release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-deploy:
+    run-on: ubuntu-20.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: setup Go
+        run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.16'
+
+      - name: build-linux
+        run: '/usr/lib/go-1.16/bin/go build -o google-rotation-planner_linux_amd64.bin .'
+
+      - name: build-windows
+        run: 'GOOS=windows /usr/lib/go-1.16/bin/go build -o google-rotation-planner_windows_amd64.exe .'
+
+      - name: build-macos-amd64
+        run: 'GOOS=darwin /usr/lib/go-1.16/bin/go build -o google-rotation-planner_macos_amd64.bin .'
+
+      - name: build-macos-amd64
+        run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.16/bin/go build -o google-rotation-planner_macos_arm64.bin .'
+
+      - name: release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            google-rotation-planner_linux_amd64.bin
+            google-rotation-planner_windows_amd64.exe
+            google-rotation-planner_macos_amd64.bin
+            google-rotation-planner_macos_arm64.bin
+            LICENSE
