@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -15,19 +15,19 @@ jobs:
           submodules: true
 
       - name: setup Go
-        run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.16'
+        run: 'sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get install -y golang-1.18'
 
       - name: build-linux
-        run: '/usr/lib/go-1.16/bin/go build -o google-rotation-planner_linux_amd64.bin .'
+        run: '/usr/lib/go-1.18/bin/go build -o google-rotation-planner_linux_amd64.bin ./cmd/google-rotation-planner'
 
       - name: build-windows
-        run: 'GOOS=windows /usr/lib/go-1.16/bin/go build -o google-rotation-planner_windows_amd64.exe .'
+        run: 'GOOS=windows /usr/lib/go-1.18/bin/go build -o google-rotation-planner_windows_amd64.exe ./cmd/google-rotation-planner'
 
       - name: build-macos-amd64
-        run: 'GOOS=darwin /usr/lib/go-1.16/bin/go build -o google-rotation-planner_macos_amd64.bin .'
+        run: 'GOOS=darwin /usr/lib/go-1.18/bin/go build -o google-rotation-planner_macos_amd64.bin ./cmd/google-rotation-planner'
 
       - name: build-macos-amd64
-        run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.16/bin/go build -o google-rotation-planner_macos_arm64.bin .'
+        run: 'GOOS=darwin GOARCH=arm64 /usr/lib/go-1.18/bin/go build -o google-rotation-planner_macos_arm64.bin ./cmd/google-rotation-planner'
 
       - name: release
         uses: softprops/action-gh-release@v1
